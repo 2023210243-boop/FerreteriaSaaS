@@ -65,5 +65,38 @@
             }
         }
     </script>
+    <script>
+    const btnGuardar = document.querySelector('button');
+    const tabla = document.querySelector('table tbody');
+
+    btnGuardar.addEventListener('click', () => {
+        // Obtenemos los valores de los cuadritos (inputs)
+        const nombre = document.querySelectorAll('input')[0].value;
+        const cantidad = document.querySelectorAll('input')[1].value;
+        const precio = document.querySelectorAll('input')[2].value;
+
+        if(nombre === "" || cantidad === "" || precio === "") {
+            alert("¡Primo, llena todos los campos!");
+            return;
+        }
+
+        // Creamos una nueva fila para la tabla
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${nombre}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${cantidad}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">$${precio}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <button onclick="this.parentElement.parentElement.remove()" style="background: red; color: white; border: none; padding: 5px; cursor: pointer;">Eliminar</button>
+            </td>
+        `;
+
+        // Metemos la fila en la tabla
+        tabla.appendChild(fila);
+
+        // Limpiamos los cuadritos
+        document.querySelectorAll('input').forEach(input => input.value = "");
+    });
+</script>
 </body>
 </html>
