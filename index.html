@@ -4,123 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ferretería Pro - Inventario</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #1d4ed8; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        table { width: 100%; max-width: 600px; margin-top: 20px; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th { background: #1e40af; color: white; padding: 12px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+    </style>
 </head>
-<body class="bg-gray-100 p-5">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-blue-800 mb-6">🛠️ Control de Inventario - Ferretería</h1>
+<body>
 
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold mb-4">Agregar Nuevo Producto</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" id="nombre" placeholder="Nombre del producto (ej. Martillo)" class="border p-2 rounded">
-                <input type="number" id="cantidad" placeholder="Cantidad" class="border p-2 rounded">
-                <input type="number" id="precio" placeholder="Precio ($)" class="border p-2 rounded">
-            </div>
-            <button onclick="agregarProducto()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
-                Guardar en Inventario
-            </button>
-        </div>
+    <h1>🛠️ Control de Inventario</h1>
 
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-blue-800 text-white">
-                    <tr>
-                        <th class="p-3">Producto</th>
-                        <th class="p-3">Stock</th>
-                        <th class="p-3">Precio</th>
-                        <th class="p-3">Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="lista-productos">
-                    </tbody>
-            </table>
-        </div>
+    <div class="card">
+        <h3>Agregar Nuevo Producto</h3>
+        <input type="text" id="nombre" placeholder="Nombre (ej. Martillo)">
+        <input type="number" id="cantidad" placeholder="Cantidad">
+        <input type="number" id="precio" placeholder="Precio ($)">
+        <button onclick="guardarProducto()">Guardar en Inventario</button>
     </div>
 
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="lista-productos"></tbody>
+    </table>
+
     <script>
-        // Lógica básica para probar el sistema
-        function agregarProducto() {
+        // 1. Cargar datos apenas abre la página
+        document.addEventListener('DOMContentLoaded', mostrarProductos);
+
+        function guardarProducto() {
             const nombre = document.getElementById('nombre').value;
             const cantidad = document.getElementById('cantidad').value;
             const precio = document.getElementById('precio').value;
 
-            if(nombre && cantidad && precio) {
-                const fila = `
-                    <tr class="border-b">
-                        <td class="p-3">${nombre}</td>
-                        <td class="p-3">${cantidad}</td>
-                        <td class="p-3">$${precio}</td>
-                        <td class="p-3 text-red-500 cursor-pointer">Eliminar</td>
+            if(!nombre || !cantidad || !precio) {
+                alert("¡Faltan datos, primo!");
+                return;
+            }
+
+            const producto = { nombre, cantidad, precio };
+            
+            // Traer lo que hay, sumar el nuevo y guardar
+            let inventario = JSON.parse(localStorage.getItem('ferre_datos')) || [];
+            inventario.push(producto);
+            localStorage.setItem('ferre_datos', JSON.stringify(inventario));
+
+            // Limpiar cajas y refrescar tabla
+            document.getElementById('nombre').value = "";
+            document.getElementById('cantidad').value = "";
+            document.getElementById('precio').value = "";
+            mostrarProductos();
+        }
+
+        function mostrarProductos() {
+            const tabla = document.getElementById('lista-productos');
+            tabla.innerHTML = "";
+            const inventario = JSON.parse(localStorage.getItem('ferre_datos')) || [];
+
+            inventario.forEach((prod, index) => {
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${prod.nombre}</td>
+                        <td>${prod.cantidad}</td>
+                        <td>$${prod.precio}</td>
+                        <td><button onclick="eliminar(${index})" style="background:red; padding:5px;">X</button></td>
                     </tr>
                 `;
-                document.getElementById('lista-productos').innerHTML += fila;
-                
-                // Limpiar campos
-                document.getElementById('nombre').value = '';
-                document.getElementById('cantidad').value = '';
-                document.getElementById('precio').value = '';
-            } else {
-                alert("Primo, llena todos los campos, no te me adelantes.");
-            }
+            });
+        }
+
+        function eliminar(index) {
+            let inventario = JSON.parse(localStorage.getItem('ferre_datos'));
+            inventario.splice(index, 1);
+            localStorage.setItem('ferre_datos', JSON.stringify(inventario));
+            mostrarProductos();
         }
     </script>
-    <script>
-    const btnGuardar = document.querySelector('button');
-    const tabla = document.querySelector('table tbody');
-
-    // 1. FUNCIÓN PARA CARGAR LOS DATOS AL ABRIR LA PÁGINA
-    function cargarInventario() {
-        const datosGuardados = JSON.parse(localStorage.getItem('inventarioFerreteria')) || [];
-        datosGuardados.forEach(item => agregarFilaATabla(item.nombre, item.cantidad, item.precio));
-    }
-
-    // 2. FUNCIÓN PARA GUARDAR EN LA "LIBRETITA" (LocalStorage)
-    function guardarEnLocal(nombre, cantidad, precio) {
-        const inventario = JSON.parse(localStorage.getItem('inventarioFerreteria')) || [];
-        inventario.push({ nombre, cantidad, precio });
-        localStorage.setItem('inventarioFerreteria', JSON.stringify(inventario));
-    }
-
-    // 3. FUNCIÓN PARA PINTAR LA FILA EN LA TABLA
-    function agregarFilaATabla(nombre, cantidad, precio) {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${nombre}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${cantidad}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">$${precio}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
-                <button onclick="eliminarProducto('${nombre}', this)" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Borrar</button>
-            </td>
-        `;
-        tabla.appendChild(fila);
-    }
-
-    // 4. EVENTO DEL BOTÓN GUARDAR
-    btnGuardar.addEventListener('click', () => {
-        const inputs = document.querySelectorAll('input');
-        const nombre = inputs[0].value;
-        const cantidad = inputs[1].value;
-        const precio = inputs[2].value;
-
-        if(!nombre || !cantidad || !precio) return alert("¡Faltan datos, primo!");
-
-        agregarFilaATabla(nombre, cantidad, precio);
-        guardarEnLocal(nombre, cantidad, precio);
-
-        inputs.forEach(i => i.value = ""); // Limpiar
-    });
-
-    // 5. FUNCIÓN PARA BORRAR DE VERDAD
-    window.eliminarProducto = (nombre, boton) => {
-        let inventario = JSON.parse(localStorage.getItem('inventarioFerreteria'));
-        inventario = inventario.filter(item => item.nombre !== nombre);
-        localStorage.setItem('inventarioFerreteria', JSON.stringify(inventario));
-        boton.parentElement.parentElement.remove();
-    };
-
-    // Iniciar cargando lo que ya existe
-    cargarInventario();
-</script>
 </body>
 </html>
